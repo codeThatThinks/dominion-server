@@ -5,11 +5,19 @@ var io = require('socket.io').listen(server);
 
 var logentries = require('node-logentries');
 var log = logentries.logger({
-  token:'1921f70f-d889-485a-b0df-0688f6584691'
+  token:'547b28e2-70c2-4efb-95a4-cd18664cecb3'
+});
+
+/* configure socket.io */
+io.configure(function ()
+{
+	io.set("transports", ["xhr-polling"]); 
+	io.set("polling duration", 10); 
 });
 
 /* variables */
 var territory = new Array();
+var port = 8080;
 
 /* objects */
 function Point(x, y)
@@ -31,11 +39,17 @@ function territoryUnit(point, country)
 	this.country = country;
 }
 
-server.listen(80);
+server.listen(port);
+log.info('Listening on port ' + port);
+
+app.get('/', function (req, res)
+{
+	res.sendfile(__dirname + '/index.html');
+});
 
 io.sockets.on('connection', function(socket)
 {
-	socket.on('connect', function(country, color, callback)
+	socket.on('setup', function(country, color, callback)
 	{
 		socket.set('country', country, function()
 		{
@@ -51,7 +65,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('disconnect', function()
 	{
 		log.info("removeCountry(): " + socket.get('country'));
-		
+
 		// unclaim all territory for that country
 		for(var n = 0; n < territory.length; n++)
 		{
