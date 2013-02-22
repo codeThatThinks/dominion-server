@@ -56,12 +56,13 @@ io.sockets.on('connection', function(socket)
 		{
 			socket.set('color', color, function()
 			{
-				log.info("addCountry(): " + socket.get('country') + ", " + socket.get('color'));
-				console.log("addCountry(): " + socket.get('country') + ", " + socket.get('color'));
-				socket.broadcast.emit('addCountry', socket.get('country'), socket.get('color'));
-				callback('success');
+				log.info("addCountry(): " + country + ", " + color);
+				console.log("addCountry(): " + country + ", " + color);
+				socket.broadcast.emit('addCountry', country, color);
 			});
 		});
+
+		callback('success');
 	});
 
 	socket.on('disconnect', function()
