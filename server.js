@@ -41,6 +41,7 @@ function territoryUnit(point, country)
 
 server.listen(port);
 log.info('Listening on port ' + port);
+console.log('Listening on port ' + port);
 
 app.get('/', function (req, res)
 {
@@ -56,6 +57,7 @@ io.sockets.on('connection', function(socket)
 			socket.set('color', color, function()
 			{
 				log.info("addCountry(): " + socket.get('country') + ", " + socket.get('color'));
+				console.log("addCountry(): " + socket.get('country') + ", " + socket.get('color'));
 				socket.broadcast.emit('addCountry', socket.get('country'), socket.get('color'));
 				callback('success');
 			});
@@ -65,6 +67,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('disconnect', function()
 	{
 		log.info("removeCountry(): " + socket.get('country'));
+		console.log("removeCountry(): " + socket.get('country'));
 
 		// unclaim all territory for that country
 		for(var n = 0; n < territory.length; n++)
@@ -82,6 +85,7 @@ io.sockets.on('connection', function(socket)
 	socket.on('claim', function(x, y)
 	{
 		log.info("claim(): " + socket.get('country') + " claimed point(" + x + "," + y + ")");
+		console.log("claim(): " + socket.get('country') + " claimed point(" + x + "," + y + ")");
 		territory.push(new territoryUnit(new Point(x,y), socket.get('country')));
 		socket.broadcast.emit('claim', x, y, socket.get('country'));
 	});
@@ -89,6 +93,8 @@ io.sockets.on('connection', function(socket)
 	socket.on('unclaim', function(x, y)
 	{
 		log.info("unclaim(): " + socket.get('country') + " unclaimed point(" + x + "," + y + ")");
+		console.log("unclaim(): " + socket.get('country') + " unclaimed point(" + x + "," + y + ")");
+
 		for(var n = 0; n < territory.length; n++)
 		{
 			if(territory[n].country == socket.get('country'))
