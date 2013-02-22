@@ -85,24 +85,30 @@ io.sockets.on('connection', function(socket)
 
 	socket.on('claim', function(x, y)
 	{
-		log.info("claim(): " + socket.get('country') + " claimed point(" + x + "," + y + ")");
-		console.log("claim(): " + socket.get('country') + " claimed point(" + x + "," + y + ")");
-		territory.push(new territoryUnit(new Point(x,y), socket.get('country')));
-		socket.broadcast.emit('claim', x, y, socket.get('country'));
+		socket.get('country', function(err, country)
+		{
+			log.info("claim(): " + country + " claimed point(" + x + "," + y + ")");
+			console.log("claim(): " + country + " claimed point(" + x + "," + y + ")");
+			territory.push(new territoryUnit(new Point(x,y), country));
+			socket.broadcast.emit('claim', x, y, country);
+		});
 	});
 
 	socket.on('unclaim', function(x, y)
 	{
-		log.info("unclaim(): " + socket.get('country') + " unclaimed point(" + x + "," + y + ")");
-		console.log("unclaim(): " + socket.get('country') + " unclaimed point(" + x + "," + y + ")");
-
-		for(var n = 0; n < territory.length; n++)
+		socket.get('country', function(err, country)
 		{
-			if(territory[n].country == socket.get('country'))
+			log.info("unclaim(): " + country + " unclaimed point(" + x + "," + y + ")");
+			console.log("unclaim(): " + country + " unclaimed point(" + x + "," + y + ")");
+
+			for(var n = 0; n < territory.length; n++)
 			{
-				territory.splice(n, 1);
-				unclaim(territory[n].point.x, territory[n].point.y, socket.get('country'));
+				if(territory[n].country == country)
+				{
+					territory.splice(n, 1);
+					unclaim(territory[n].point.x, territory[n].point.y, country);
+				}
 			}
-		}
+		});
 	});
 });
