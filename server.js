@@ -17,7 +17,7 @@ io.configure(function ()
 
 /* variables */
 var territory = new Array();
-var port = 8080;
+var port = 80;
 
 /* objects */
 function Point(x, y)
