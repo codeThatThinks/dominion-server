@@ -1,6 +1,12 @@
 var app = require('express')();
 var server = require('http').createServer(app);
+
 var io = require('socket.io').listen(server);
+
+var logentries = require('node-logentries');
+var log = logentries.logger({
+  token:'1921f70f-d889-485a-b0df-0688f6584691'
+});
 
 /* variables */
 var territory = new Array();
@@ -27,12 +33,6 @@ function territoryUnit(point, country)
 
 server.listen(80);
 
-app.get('/', function (req, res)
-{
-	res.sendfile(__dirname + '/index.html');
-});
-
-
 io.sockets.on('connection', function(socket)
 {
 	socket.on('connect', function(country, color, callback)
@@ -41,6 +41,7 @@ io.sockets.on('connection', function(socket)
 		{
 			socket.set('color', color, function()
 			{
+				log.info("addCountry(): " + socket.get('country') + ", " + socket.get('color'));
 				socket.broadcast.emit('addCountry', socket.get('country'), socket.get('color'));
 				callback('success');
 			});
@@ -49,6 +50,8 @@ io.sockets.on('connection', function(socket)
 
 	socket.on('disconnect', function()
 	{
+		log.info("removeCountry(): " + socket.get('country'));
+		
 		// unclaim all territory for that country
 		for(var n = 0; n < territory.length; n++)
 		{
@@ -64,12 +67,14 @@ io.sockets.on('connection', function(socket)
 
 	socket.on('claim', function(x, y)
 	{
+		log.info("claim(): " + socket.get('country') + " claimed point(" + x + "," + y + ")");
 		territory.push(new territoryUnit(new Point(x,y), socket.get('country')));
 		socket.broadcast.emit('claim', x, y, socket.get('country'));
 	});
 
 	socket.on('unclaim', function(x, y)
 	{
+		log.info("unclaim(): " + socket.get('country') + " unclaimed point(" + x + "," + y + ")");
 		for(var n = 0; n < territory.length; n++)
 		{
 			if(territory[n].country == socket.get('country'))
