@@ -103,10 +103,10 @@ io.sockets.on('connection', function(socket)
 
 			for(var n = 0; n < territory.length; n++)
 			{
-				if(territory[n].country == country)
+				if(territory[n].country == country && territory[n].point.x == x && territory[n].point.y == y)
 				{
 					territory.splice(n, 1);
-					unclaim(territory[n].point.x, territory[n].point.y, country);
+					socket.broadcast.emit('unclaim', x, y, counstry);
 				}
 			}
 		});
