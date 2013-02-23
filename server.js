@@ -67,19 +67,19 @@ io.sockets.on('connection', function(socket)
 
 	socket.on('disconnect', function()
 	{
-		log.info(country + ": removeCountry()");
-		console.log(country + ": removeCountry()");
-
 		// unclaim all territory for that country
 		for(var n = 0; n < territory.length; n++)
 		{
 			if(territory[n].country == socket.get('country'))
 			{
 				territory.splice(n, 1);
-				unclaim(territory[n].point.x, territory[n].point.y, socket.get('country'));
+				socket.broadcast.emit('unclaim', x, y, country);
 			}
 		}
 
+		log.info(country + ": removeCountry()");
+		console.log(country + ": removeCountry()");
+		
 		socket.broadcast.emit('removeCountry', socket.get('country'));
 	});
 
