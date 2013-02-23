@@ -106,7 +106,7 @@ io.sockets.on('connection', function(socket)
 				if(territory[n].country == country && territory[n].point.x == x && territory[n].point.y == y)
 				{
 					territory.splice(n, 1);
-					socket.broadcast.emit('unclaim', x, y, counstry);
+					socket.broadcast.emit('unclaim', x, y, country);
 				}
 			}
 		});
