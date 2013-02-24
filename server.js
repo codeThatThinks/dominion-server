@@ -144,22 +144,25 @@ io.sockets.on('connection', function(socket)
 	// when client disconnects
 	socket.on('disconnect', function()
 	{
-		// unclaim all territory for that country
-		for(var n = 0; n < territory.length; n++)
+		socket.get('country', function(err, country)
 		{
-			if(territory[n].country == socket.get('country'))
+			// unclaim all territory for that country
+			for(var n = 0; n < territory.length; n++)
 			{
-				territory.splice(n, 1);
+				if(territory[n].country == country)
+				{
+					territory.splice(n, 1);
 
-				// let other countries know
-				socket.broadcast.emit('unclaim', x, y, country);
+					// let other countries know
+					socket.broadcast.emit('unclaim', x, y, country);
+				}
 			}
-		}
 
-		log.info(country + ": removeCountry()");
-		console.log(country + ": removeCountry()");
+			log.info(country + ": removeCountry()");
+			console.log(country + ": removeCountry()");
 
-		// let other countries know
-		socket.broadcast.emit('removeCountry', socket.get('country'));
+			// let other clients know
+			socket.broadcast.emit('removeCountry', country);
+		});
 	});
 });
