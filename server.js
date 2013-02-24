@@ -80,7 +80,7 @@ io.sockets.on('connection', function(socket)
 		log.info(country + ": send existing countries");
 		console.log(country + ": send existing countries");
 
-		socket.emit('sendCountries', countriesArray);
+		socket.emit('sendCountries', JSON.stringify(countriesArray));
 	});
 
 		// client received countries, now send Territory
@@ -89,7 +89,7 @@ io.sockets.on('connection', function(socket)
 			log.info(country + ": send existing territory");
 			console.log(country + ": send existing territory");
 
-			socket.emit('sendTerritory', territory);
+			socket.emit('sendTerritory', JSON.stringify(territory));
 		});
 
 
