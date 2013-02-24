@@ -20,6 +20,12 @@ var territory = new Array();
 var port = 80;
 
 /* objects */
+function Country(name, color)
+{
+	this.name = name;
+	this.color = color;
+}
+
 function Point(x, y)
 {
 	function set(newX, newY)
@@ -50,7 +56,8 @@ app.get('/', function (req, res)
 
 io.sockets.on('connection', function(socket)
 {
-	socket.on('setup', function(country, color, callback)
+	// when client connects for first time
+	socket.on('setup', function(country, color)
 	{
 		socket.set('country', country, function()
 		{
@@ -62,9 +69,68 @@ io.sockets.on('connection', function(socket)
 			});
 		});
 
-		callback('success');
+		// prepare and send countries array
+		var countriesArray = new Array();
+
+		for(var n = 0; n < io.sockets.clients().length; n++)
+		{
+			countriesArray.push(new Country(io.sockets.clients()[n].get('country'), io.sockets.clients()[n].get('color')));
+		}
+
+		log.info(country + ": send existing countries");
+		console.log(country + ": send existing countries");
+
+		socket.emit('sendCountries', countriesArray);
 	});
 
+		// client received countries, now send Territory
+		socket.on('sendCountriesSuccess', function()
+		{
+			log.info(country + ": send existing territory");
+			console.log(country + ": send existing territory");
+
+			socket.emit('sendTerritory', territory);
+		});
+
+
+	// when client claims territory
+	socket.on('claim', function(x, y)
+	{
+		socket.get('country', function(err, country)
+		{
+			log.info(country + ": claimed point(" + x + "," + y + ")");
+			console.log(country + ": claimed point(" + x + "," + y + ")");
+
+			territory.push(new territoryUnit(new Point(x,y), country));
+
+			// let other clients know
+			socket.broadcast.emit('claim', x, y, country);
+		});
+	});
+
+		// when client disconnects
+		socket.on('unclaim', function(x, y)
+		{
+			socket.get('country', function(err, country)
+			{
+				log.info(country + ": unclaimed point(" + x + "," + y + ")");
+				console.log(country + ": unclaimed point(" + x + "," + y + ")");
+
+				for(var n = 0; n < territory.length; n++)
+				{
+					if(territory[n].country == country && territory[n].point.x == x && territory[n].point.y == y)
+					{
+						territory.splice(n, 1);
+
+						// let other countries know
+						socket.broadcast.emit('unclaim', x, y, country);
+					}
+				}
+			});
+		});
+
+
+	// when client disconnects
 	socket.on('disconnect', function()
 	{
 		// unclaim all territory for that country
@@ -73,42 +139,16 @@ io.sockets.on('connection', function(socket)
 			if(territory[n].country == socket.get('country'))
 			{
 				territory.splice(n, 1);
+
+				// let other countries know
 				socket.broadcast.emit('unclaim', x, y, country);
 			}
 		}
 
 		log.info(country + ": removeCountry()");
 		console.log(country + ": removeCountry()");
-		
+
+		// let other countries know
 		socket.broadcast.emit('removeCountry', socket.get('country'));
-	});
-
-	socket.on('claim', function(x, y)
-	{
-		socket.get('country', function(err, country)
-		{
-			log.info(country + ": claimed point(" + x + "," + y + ")");
-			console.log(country + ": claimed point(" + x + "," + y + ")");
-			territory.push(new territoryUnit(new Point(x,y), country));
-			socket.broadcast.emit('claim', x, y, country);
-		});
-	});
-
-	socket.on('unclaim', function(x, y)
-	{
-		socket.get('country', function(err, country)
-		{
-			log.info(country + ": unclaimed point(" + x + "," + y + ")");
-			console.log(country + ": unclaimed point(" + x + "," + y + ")");
-
-			for(var n = 0; n < territory.length; n++)
-			{
-				if(territory[n].country == country && territory[n].point.x == x && territory[n].point.y == y)
-				{
-					territory.splice(n, 1);
-					socket.broadcast.emit('unclaim', x, y, country);
-				}
-			}
-		});
 	});
 });
