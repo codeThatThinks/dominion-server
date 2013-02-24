@@ -86,10 +86,13 @@ io.sockets.on('connection', function(socket)
 		// client received countries, now send Territory
 		socket.on('sendCountriesSuccess', function()
 		{
-			log.info(country + ": send existing territory");
-			console.log(country + ": send existing territory");
+			socket.get('country', function(err, country)
+			{
+				log.info(country + ": send existing territory");
+				console.log(country + ": send existing territory");
 
-			socket.emit('sendTerritory', JSON.stringify(territory));
+				socket.emit('sendTerritory', JSON.stringify(territory));
+			});
 		});
 
 
