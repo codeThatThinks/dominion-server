@@ -80,7 +80,7 @@ io.sockets.on('connection', function(socket)
 		log.info(country + ": send existing countries");
 		console.log(country + ": send existing countries");
 
-		log.debug("JSON.stringify(countriesArray): " + String(JSON.stringify(countriesArray)));
+		log.debug("JSON.stringify(countriesArray): " + JSON.stringify(countriesArray));
 
 		socket.emit('sendCountries', JSON.stringify(countriesArray));
 	});
@@ -93,7 +93,7 @@ io.sockets.on('connection', function(socket)
 				log.info(country + ": send existing territory");
 				console.log(country + ": send existing territory");
 
-				log.debug("JSON.stringify(territory): " + String(JSON.stringify(territory)));
+				log.debug("JSON.stringify(territory): " + JSON.stringify(territory));
 
 				socket.emit('sendTerritory', JSON.stringify(territory));
 			});
