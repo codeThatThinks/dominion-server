@@ -59,12 +59,14 @@ io.sockets.on('connection', function(socket)
 	// when client connects for first time
 	socket.on('setup', function(country, color)
 	{
+		var colorParsed = JSON.parse(color);
+
 		socket.set('country', country, function()
 		{
-			socket.set('color', color, function()
+			socket.set('color', colorParsed, function()
 			{
-				log.info(country + ": addCountry() with color " + color);
-				console.log(country + ": addCountry() with color " + color);
+				log.info(country + ": addCountry() with color " + colorParsed);
+				console.log(country + ": addCountry() with color " + colorParsed);
 				socket.broadcast.emit('addCountry', country, color);
 			});
 		});
