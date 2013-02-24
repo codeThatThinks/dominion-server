@@ -74,7 +74,7 @@ io.sockets.on('connection', function(socket)
 
 		for(var n = 0; n < io.sockets.clients().length; n++)
 		{
-			countriesArray.push(new Country(io.sockets.clients()[n].get('country'), io.sockets.clients()[n].get('color')));
+			countriesArray.push(new Country(io.sockets.clients()[n].country, io.sockets.clients()[n].color));
 		}
 
 		log.info(country + ": send existing countries");
