@@ -74,13 +74,17 @@ io.sockets.on('connection', function(socket)
 
 		for(var n = 0; n < io.sockets.clients().length; n++)
 		{
-			countriesArray.push(new Country(io.sockets.clients()[n].country, io.sockets.clients()[n].color));
+			io.sockets.clients()[n].get('country', function(err, arrayCountry)
+			{
+				io.sockets.clients()[n].get('color', function(err, arrayColor)
+				{
+					countriesArray.push(new Country(arrayCountry, arrayColor));
+				});
+			});
 		}
 
 		log.info(country + ": send existing countries");
 		console.log(country + ": send existing countries");
-
-		log.debug("JSON.stringify(countriesArray): " + JSON.stringify(countriesArray));
 
 		socket.emit('sendCountries', JSON.stringify(countriesArray));
 	});
