@@ -153,9 +153,6 @@ io.sockets.on('connection', function(socket)
 			{
 				if(territory[n].country == country)
 				{
-					// let other countries know
-					socket.broadcast.emit('unclaim', territory[n].point.x, territory[n].point.y, country);
-					
 					territory.splice(n, 1);
 				}
 			}
