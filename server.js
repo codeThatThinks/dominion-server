@@ -54,6 +54,13 @@ app.get('/', function (req, res)
 	res.sendfile(__dirname + '/index.html');
 });
 
+// log errors to logentries
+log.on('error', function(err)
+{
+   log.err(err);
+   console.log(err);
+}
+
 io.sockets.on('connection', function(socket)
 {
 	// when client connects for first time
