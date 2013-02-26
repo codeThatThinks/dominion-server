@@ -157,7 +157,7 @@ io.sockets.on('connection', function(socket)
 		socket.get('country', function(err, country)
 		{
 			// unclaim all territory for that country
-			for(var n = territory.length; n >= 0; n--)
+			for(var n = territory.length - 1; n >= 0; n--)
 			{
 				if(territory[n].country == country)
 				{
