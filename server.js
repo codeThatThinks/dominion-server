@@ -129,7 +129,7 @@ io.sockets.on('connection', function(socket)
 				log.info(country + ": unclaimed point(" + x + "," + y + ")");
 				console.log(country + ": unclaimed point(" + x + "," + y + ")");
 
-				for(var n = 0; n < territory.length; n++)
+				for(var n = territory.length; n >= 0; n--)
 				{
 					if(territory[n].country == country && territory[n].point.x == x && territory[n].point.y == y)
 					{
@@ -149,7 +149,7 @@ io.sockets.on('connection', function(socket)
 		socket.get('country', function(err, country)
 		{
 			// unclaim all territory for that country
-			for(var n = 0; n < territory.length; n++)
+			for(var n = territory.length; n >= 0; n--)
 			{
 				if(territory[n].country == country)
 				{
