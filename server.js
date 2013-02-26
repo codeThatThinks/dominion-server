@@ -59,7 +59,7 @@ log.on('error', function(err)
 {
    log.err(err);
    console.log(err);
-}
+});
 
 io.sockets.on('connection', function(socket)
 {
