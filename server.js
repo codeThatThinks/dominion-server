@@ -1,14 +1,37 @@
+/**********
+ * Node.js Server
+ * Author: Ian Glen <ian@ianglen.me>
+ *********/
+
+
+/**
+ * includes
+ */
 var app = require('express')();
 var server = require('http').createServer(app);
 
 var io = require('socket.io').listen(server);
 
 var logentries = require('node-logentries');
-var log = logentries.logger({
+var log = logentries.logger(
+{
   token:'547b28e2-70c2-4efb-95a4-cd18664cecb3'
 });
 
-/* configure socket.io */
+var mysql = require('mysql');
+var db = mysql.createConnection(
+{
+	host: 'instance39639.db.xeround.com',
+	port: 7398,
+	user: 'appfog',
+	password: 'dominion',
+	database: 'dominion',
+})
+
+
+/**
+ * configure includes
+ */
 io.configure(function ()
 {
 	io.set("transports", ["xhr-polling"]); 
@@ -16,11 +39,17 @@ io.configure(function ()
 	io.set("log level", 2);
 });
 
-/* variables */
+
+/**
+ * variables
+ */
 var territory = new Array();
 var port = 80;
 
-/* objects */
+
+/**
+ * objects
+ */
 function Country(name, color)
 {
 	this.name = name;
@@ -46,6 +75,10 @@ function territoryUnit(point, country)
 	this.country = country;
 }
 
+
+/**
+ * setup
+ */
 server.listen(port);
 log.info('Listening on port ' + port);
 console.log('Listening on port ' + port);
@@ -55,6 +88,8 @@ app.get('/', function (req, res)
 	res.sendfile(__dirname + '/index.html');
 });
 
+db.connect();
+
 // log errors to logentries
 log.on('error', function(err)
 {
@@ -62,6 +97,27 @@ log.on('error', function(err)
    console.log(err);
 });
 
+// handle mysql errors
+db.on('error', function(err)
+{
+	log.err("MySQL Error: " + err);
+	console.log("MySQL Error: " + err);
+
+	// reconnect on lost connection
+	if (err.code == 'PROTOCOL_CONNECTION_LOST')
+	{
+		log.info("Reconnecting to MySQL database...");
+		console.log("Reconnecting to MySQL database...");
+
+		connection = mysql.createConnection(connection.config);
+		connection.connect();
+	}
+ });
+
+
+/**
+ * events
+ */
 io.sockets.on('connection', function(socket)
 {
 	// when client connects for first time
@@ -113,6 +169,66 @@ io.sockets.on('connection', function(socket)
 			});
 		});
 
+	// when client logs in
+	socket.on('login', function(email, password)
+	{
+		// check if account exists
+		var query = db.query('SELECT * FROM users WHERE email = ' + db.escape(email), function(err, result)
+		{
+			if(err)
+			{
+				log.err("MySQL Error: " + err);
+				console.log("MySQL Error: " + err);
+			}
+
+			if(result.length)
+			{
+				// account exists, continue
+				query = db.query('SELECT * FROM users WHERE password = ' + db.escape(password), function(err, result)
+				{
+					if(err)
+					{
+						log.err("MySQL Error: " + err);
+						console.log("MySQL Error: " + err);
+					}
+
+					if(result.length)
+					{
+						log.info("login: " + email);
+						console.log("login: " + email);
+
+						// password works, return true
+						socket.emit('loginEvent', true);
+					}
+					else
+					{
+						log.info("failed login: " + email);
+						console.log("failed login: " + email);
+
+						socket.emit('loginEvent', false);
+					}
+				});
+			}
+			else
+			{
+				// doesn't exist, create account
+				query = db.query('INSERT INTO users (email, password) VALUES (' + db.escape(email) + ', ' + db.escape(password) + ')', function(err)
+				{
+					if(err)
+					{
+						log.err("MySQL Error: " + err);
+						console.log("MySQL Error: " + err);
+					}
+
+					log.info("new account: " + email);
+					console.log("new account: " + email);
+
+					// account created, everything good
+					socket.emit('loginEvent', true);
+				});
+			}
+		});
+	});
 
 	// when client claims territory
 	socket.on('claim', function(x, y)
