@@ -1,18 +1,21 @@
-# Dominion
-Claim territory, wage war, and become powerful. Still extremely early in development.
-  
-You can play the pre-alpha here: [http://dominion.ianglen.me](http://dominion.ianglen.me)
+# Dominion Server
 
-----
+This is the Node.js server back-end for Dominion. Communication between client and server is done via the socket.io module. Game data is stored in memory and routinely saved to Redis.
 
-This is the Node.js server back-end for the game. Communication between client and server is done via the socket.io module. Game data is store in a MySQL database.
+The client version of the game is available here: https://github.com/codeThatThinks/Dominion.
 
-The client version of the game is available here: [https://github.com/codeThatThinks/Dominion](https://github.com/codeThatThinks/Dominion).
+You can play the pre-alpha here: http://dominion.ianglen.me
 
-## Required modules
+# Installing
 
-Dominion-server requires Express, Socket.io, and MySQL. Install them with npm:
+Dominion-server requires Express, Socket.io, and Redis. Install them with npm:
 
 ```
-npm install -g express socket.io mysql
+npm install
+```
+
+Then start the app.
+
+```
+node app.js
 ```
