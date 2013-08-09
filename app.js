@@ -131,50 +131,30 @@ io.sockets.on('connection', function(socket)
 	// when client logs in
 	socket.on('login', function(email, password)
 	{
-		// check if username exists
+		console.log("email: " + email);
+		console.log("password: " + password);
+
+		// check if account exists
 		db.exists("username:" + email, function(err, result)
 		{
-			if(result == 1)
+			if(err)
 			{
-				// username exists, check if password matches
-				db.get("username:" + email + ":password", function(err, result)
-				{
-					if(err)
-					{
-						log.err("Redis: " + err);
-						console.log("Redis Error: " + err);
-					}
-
-					if(password == result)
-					{
-						// password matches, so login is correct
-						log.info("<" + email + "> logged in");
-						console.log("<" + email + "> logged in");
-
-						socket.emit('loginEvent', true);
-					}
-					else
-					{
-						// password doesn't match, so login is incorrect
-						log.info("<" + email + "> failed login");
-						console.log("<" + email + "> failed login");
-
-						socket.emit('loginEvent', false);
-					}
-				});
+				log.err("Redis: " + err);
+				console.log("Redis Error: " + err);
 			}
-			else
-			{
-				// username doesn't exist, create an account
-				db.set("username:" + email, email, function(err, result)
-				{
-					if(err)
-					{
-						log.err("Redis: " + err);
-						console.log("Redis Error: " + err);
-					}
 
-					db.set("username:email:password", password, function(err, result)
+			db.exists("username:" + email + ":password", function(err, result)
+			{
+				if(err)
+				{
+					log.err("Redis: " + err);
+					console.log("Redis Error: " + err);
+				}
+
+				if(result == 1)
+				{
+					// account exists, check if password matches
+					db.get("username:" + email + ":password", function(err, result)
 					{
 						if(err)
 						{
@@ -182,14 +162,52 @@ io.sockets.on('connection', function(socket)
 							console.log("Redis Error: " + err);
 						}
 
-						log.info("<" + email + "> account created");
-						console.log("<" + email + "> account created");
+						if(password == result)
+						{
+							// password matches, so login is correct
+							log.info("<" + email + "> logged in");
+							console.log("<" + email + "> logged in");
 
-						// account creation successful
-						socket.emit('loginEvent', true);
+							socket.emit('loginEvent', true);
+						}
+						else
+						{
+							// password doesn't match, so login is incorrect
+							log.info("<" + email + "> failed login");
+							console.log("<" + email + "> failed login");
+
+							socket.emit('loginEvent', false);
+						}
 					});
-				});
-			}
+				}
+				else
+				{
+					// username doesn't exist, create an account
+					db.set("username:" + email, email, function(err, result)
+					{
+						if(err)
+						{
+							log.err("Redis: " + err);
+							console.log("Redis Error: " + err);
+						}
+
+						db.set("username:email:password", password, function(err, result)
+						{
+							if(err)
+							{
+								log.err("Redis: " + err);
+								console.log("Redis Error: " + err);
+							}
+
+							log.info("<" + email + "> account created");
+							console.log("<" + email + "> account created");
+
+							// account creation successful
+							socket.emit('loginEvent', true);
+						});
+					});
+				}
+			});
 		});
 	});
 
