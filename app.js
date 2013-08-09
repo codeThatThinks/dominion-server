@@ -3,50 +3,6 @@
  * Author: Ian Glen <ian@ianglen.me>
  *********/
 
-
-/**
- * includes
- */
-var app = require('express')();
-var server = require('http').createServer(app);
-
-var io = require('socket.io').listen(server);
-
-var logentries = require('node-logentries');
-var log = logentries.logger(
-{
-  token:'547b28e2-70c2-4efb-95a4-cd18664cecb3'
-});
-
-var mysql = require('mysql');
-var db = mysql.createConnection(
-{
-	host: 'instance39639.db.xeround.com',
-	port: 7398,
-	user: 'appfog',
-	password: 'dominion',
-	database: 'dominion',
-})
-
-
-/**
- * configure includes
- */
-io.configure(function ()
-{
-	io.set("transports", ["xhr-polling"]); 
-	io.set("polling duration", 10);
-	io.set("log level", 2);
-});
-
-
-/**
- * variables
- */
-var territory = new Array();
-var port = 80;
-
-
 /**
  * objects
  */
@@ -75,6 +31,23 @@ function territoryUnit(point, country)
 	this.country = country;
 }
 
+var territory = new Array();
+var port = 3000;
+
+var app = require('express')(),
+	server = require('http').createServer(app),
+	io = require('socket.io').listen(server),
+	redis = require("redis"),
+	db = redis.createClient(),
+	logentries = require('node-logentries'),
+	log = logentries.logger({token:'92ba2453-5849-4403-80f3-1eaec6ca2158'});
+
+io.configure(function ()
+{
+	io.set("transports", ["xhr-polling"]); 
+	io.set("polling duration", 10);
+	io.set("log level", 2);
+});
 
 /**
  * setup
@@ -93,26 +66,16 @@ db.connect();
 // log errors to logentries
 log.on('error', function(err)
 {
-   log.err(err);
-   console.log(err);
+   log.err("Logentries: " + err);
+   console.log("Logentries Error: " + err);
 });
 
 // handle mysql errors
 db.on('error', function(err)
 {
-	log.err("MySQL Error: " + err);
-	console.log("MySQL Error: " + err);
-
-	// reconnect on lost connection
-	if (err.code == 'PROTOCOL_CONNECTION_LOST')
-	{
-		log.info("Reconnecting to MySQL database...");
-		console.log("Reconnecting to MySQL database...");
-
-		connection = mysql.createConnection(connection.config);
-		connection.connect();
-	}
- });
+	log.err("Redis: " + err);
+	console.log("Redis Error: " + err);
+});
 
 
 /**
@@ -172,38 +135,33 @@ io.sockets.on('connection', function(socket)
 	// when client logs in
 	socket.on('login', function(email, password)
 	{
-		// check if account exists
-		var query = db.query('SELECT * FROM users WHERE email = ' + db.escape(email), function(err, result)
+		// check if username exists
+		db.exists("username:" + email, function(err, result)
 		{
-			if(err)
+			if(result == 1)
 			{
-				log.err("MySQL Error: " + err);
-				console.log("MySQL Error: " + err);
-			}
-
-			if(result.length)
-			{
-				// account exists, continue
-				query = db.query('SELECT * FROM users WHERE password = ' + db.escape(password), function(err, result)
+				// username exists, check if password matches
+				db.get("username:" + email + ":password", function(err, result)
 				{
 					if(err)
 					{
-						log.err("MySQL Error: " + err);
-						console.log("MySQL Error: " + err);
+						log.err("Redis: " + err);
+						console.log("Redis Error: " + err);
 					}
 
-					if(result.length)
+					if(password == result)
 					{
-						log.info("login: " + email);
-						console.log("login: " + email);
+						// password matches, so login is correct
+						log.info("<" + username + "> logged in");
+						console.log("<" + username + "> logged in");
 
-						// password works, return true
 						socket.emit('loginEvent', true);
 					}
 					else
 					{
-						log.info("failed login: " + email);
-						console.log("failed login: " + email);
+						// password doesn't match, so login is incorrect
+						log.info("<" + username + "> failed login");
+						console.log("<" + username + "> failed login");
 
 						socket.emit('loginEvent', false);
 					}
@@ -211,20 +169,29 @@ io.sockets.on('connection', function(socket)
 			}
 			else
 			{
-				// doesn't exist, create account
-				query = db.query('INSERT INTO users (email, password) VALUES (' + db.escape(email) + ', ' + db.escape(password) + ')', function(err)
+				// username doesn't exist, create an account
+				db.set("username:" + email, email, function(err, result)
 				{
 					if(err)
 					{
-						log.err("MySQL Error: " + err);
-						console.log("MySQL Error: " + err);
+						log.err("Redis: " + err);
+						console.log("Redis Error: " + err);
 					}
 
-					log.info("new account: " + email);
-					console.log("new account: " + email);
+					db.set("username:email:password", password, function(err, result)
+					{
+						if(err)
+						{
+							log.err("Redis: " + err);
+							console.log("Redis Error: " + err);
+						}
 
-					// account created, everything good
-					socket.emit('loginEvent', true);
+						log.info("<" + username + "> account created");
+						console.log("<" + username + "> account created");
+
+						// account creation successful
+						socket.emit('loginEvent', true);
+					});
 				});
 			}
 		});
