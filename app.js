@@ -150,16 +150,16 @@ io.sockets.on('connection', function(socket)
 					if(password == result)
 					{
 						// password matches, so login is correct
-						log.info("<" + username + "> logged in");
-						console.log("<" + username + "> logged in");
+						log.info("<" + email + "> logged in");
+						console.log("<" + email + "> logged in");
 
 						socket.emit('loginEvent', true);
 					}
 					else
 					{
 						// password doesn't match, so login is incorrect
-						log.info("<" + username + "> failed login");
-						console.log("<" + username + "> failed login");
+						log.info("<" + email + "> failed login");
+						console.log("<" + email + "> failed login");
 
 						socket.emit('loginEvent', false);
 					}
@@ -184,8 +184,8 @@ io.sockets.on('connection', function(socket)
 							console.log("Redis Error: " + err);
 						}
 
-						log.info("<" + username + "> account created");
-						console.log("<" + username + "> account created");
+						log.info("<" + email + "> account created");
+						console.log("<" + email + "> account created");
 
 						// account creation successful
 						socket.emit('loginEvent', true);
