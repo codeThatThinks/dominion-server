@@ -61,8 +61,6 @@ app.get('/', function (req, res)
 	res.sendfile(__dirname + '/index.html');
 });
 
-db.connect();
-
 // log errors to logentries
 log.on('error', function(err)
 {
